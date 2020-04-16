@@ -1,0 +1,13 @@
+name: gitc
+version: "0.1.0"
+author: 0xE8551CCB <noti@ifaceless.space>
+about: Generate elegant and uniform commit message
+args:
+    - message: 
+        required: true
+        index: 1
+        takes_value: true
+        help: Use the given <message> as the commit message
+    - use-emoji-code-only:
+        long: use-emoji-code-only
+        help: Use emoji code instead of emoji
