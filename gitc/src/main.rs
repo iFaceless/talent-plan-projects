@@ -4,6 +4,8 @@ use maplit::hashmap;
 use std::collections::HashMap;
 use std::process::Command;
 use yaml_rust::Yaml;
+use std::process;
+use std::io::Error;
 
 lazy_static! {
     // 这里注册 git emoji 列表
@@ -23,11 +25,17 @@ lazy_static! {
     ];
 }
 
-fn main() -> Result<(), std::io::Error> {
+fn main() {
     let yml = load_yaml!("cli.yml");
     let matches = make_cli_app(yml).get_matches();
     let commit_config = CommitConfig::from_cli_arg_matches(&matches);
-    do_git_commit(&commit_config)
+    match do_git_commit(&commit_config) {
+        Ok(_) => (),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            process::exit(1);
+        }
+    }
 }
 
 fn make_cli_app<'a, 'b>(yml: &'a Yaml) -> App<'a, 'b> {
@@ -54,7 +62,6 @@ impl CommitConfig {
     fn from_cli_arg_matches(m: &ArgMatches) -> Self {
         let message = m.value_of("message").unwrap();
         let use_emoji_code_only = m.is_present("use-emoji-code-only");
-        dbg!(use_emoji_code_only);
         CommitConfig {
             message: message.to_string(),
             use_emoji_code_only: use_emoji_code_only,
