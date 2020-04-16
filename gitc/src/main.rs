@@ -25,6 +25,7 @@ lazy_static! {
     ];
 }
 
+/// 将 gitc 核心业务逻辑串联起来，实现预期的功能。
 fn main() {
     let yml = load_yaml!("cli.yml");
     let matches = make_cli_app(yml).get_matches();
@@ -38,6 +39,7 @@ fn main() {
     }
 }
 
+/// 根据配置文件和可扩展的 emoji 列表配置生成一个 [`clap::App`] 实例。
 fn make_cli_app<'a, 'b>(yml: &'a Yaml) -> App<'a, 'b> {
     let mut app = App::from_yaml(yml);
     // 将 gitmoji 相关命令注册进来
@@ -59,6 +61,8 @@ struct CommitConfig {
 }
 
 impl CommitConfig {
+    /// 解析 [`clap::ArgMatches`] 命令行参数结果，并生成 [`CommitConfig`]
+    /// 实例，方便后续使用。
     fn from_cli_arg_matches(m: &ArgMatches) -> Self {
         let message = m.value_of("message").unwrap();
         let use_emoji_code_only = m.is_present("use-emoji-code-only");
@@ -69,6 +73,8 @@ impl CommitConfig {
         }
     }
 
+    /// 通过遍历全局注册的 emoji 列表，匹配用户输入的标签（如 `feat`, `fix` 等）
+    /// 如果查找成功，则返回 [`Gitmoji`] 对象。
     fn match_gitmoji(m: &ArgMatches) -> Option<Gitmoji> {
         for x in GITMOJI_LIST.iter() {
             if m.is_present(x.get("name").unwrap()) {
@@ -87,6 +93,7 @@ struct Gitmoji {
 }
 
 impl Gitmoji {
+    /// 将输入的 emoji 字典配置转成 [`Gitmoji`] 对象
     fn from_gitmoji_config(c: &HashMap<&str, &str>) -> Self {
         Gitmoji {
             name: c.get("name").unwrap().to_string(),
@@ -96,6 +103,9 @@ impl Gitmoji {
     }
 }
 
+/// 根据输入的 [`CommitConfig`] 构建参数，并执行 `git commit -m` 命令。
+/// # Errors
+/// 如果执行出错，则会返回错误 [`std::io::Error`]。
 fn do_git_commit(c: &CommitConfig) -> Result<(), std::io::Error> {
     let mut msg = c.message.to_string();
     // 构建 commit 消息
