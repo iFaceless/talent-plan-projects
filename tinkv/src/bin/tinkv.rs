@@ -1,4 +1,3 @@
-use clap::{App, AppSettings, Arg, SubCommand};
 use std::process::exit;
 use structopt::StructOpt;
 
