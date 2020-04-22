@@ -1,7 +1,11 @@
 //! A handful command line tool to query covid-19 infections around the world.
 use csv;
 use serde::Deserialize;
-use std::{error, fs, io, path::PathBuf, process};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    process,
+};
 use structopt::StructOpt;
 
 /// Opt collects the command line arguments
@@ -36,25 +40,31 @@ struct Record {
 }
 
 fn main() {
-    run();
+    let opt = Opt::from_args();
+    match search(&opt.data_path.map(|x| x.as_path().to_owned()), &opt.country) {
+        Ok(r) => println!("{:?}", r),
+        Err(e) => {
+            println!("{:?}", e);
+            process::exit(1);
+        },
+    }
 }
 
-fn run() {
-    let opt = Opt::from_args();
-    let input: Box<dyn io::Read> = match opt.data_path {
+fn search<P: AsRef<Path>>(
+    input: &Option<P>,
+    country: &str,
+) -> Result<Record, Box<dyn std::error::Error>> {
+    let input: Box<dyn io::Read> = match input {
         None => Box::new(io::stdin()),
-        Some(p) => Box::new(fs::File::open(p.as_path()).unwrap()),
+        Some(p) => Box::new(fs::File::open(p)?),
     };
     let mut rdr = csv::Reader::from_reader(input);
-    dbg!(rdr.headers().unwrap());
-
     for r in rdr.deserialize() {
-        let record: Record = r.unwrap();
-        if record.country == opt.country {
-            dbg!(&record);
-            return
+        let record: Record = r?;
+        if record.country == country {
+            return Ok(record);
         }
     }
 
-    println!("country '{}' not found", opt.country);
+    Err(From::from("No matching country found."))
 }
