@@ -2,12 +2,12 @@
 use csv;
 use serde::Deserialize;
 use std::{
-    fmt, fs, io,
+    fs, io,
     path::{Path, PathBuf},
     process,
 };
 use structopt::StructOpt;
-use anyhow;
+use thiserror::Error;
 
 /// Opt collects the command line arguments
 #[derive(Debug, StructOpt)]
@@ -40,33 +40,14 @@ struct Record {
     number_of_cures: u32,
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 enum CliError {
-    Io(io::Error),
-    Csv(csv::Error),
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    #[error(transparent)]
+    Csv(#[from] csv::Error),
+    #[error("no matching record found")]
     NotFound,
-}
-
-impl fmt::Display for CliError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            CliError::Io(ref err) => err.fmt(f),
-            CliError::Csv(ref err) => err.fmt(f),
-            CliError::NotFound => write!(f, "No matching record found"),
-        }
-    }
-}
-
-impl From<io::Error> for CliError {
-    fn from(err: io::Error) -> CliError {
-        CliError::Io(err)
-    }
-}
-
-impl From<csv::Error> for CliError {
-    fn from(err: csv::Error) -> CliError {
-        CliError::Csv(err)
-    }
 }
 
 fn main() {
@@ -74,13 +55,13 @@ fn main() {
     match search(&opt.data_path.map(|x| x.as_path().to_owned()), &opt.country) {
         Ok(r) => println!("{:?}", r),
         Err(e) => {
-            println!("{:?}", e);
+            println!("{}", e);
             process::exit(1);
         }
     }
 }
 
-fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> anyhow::Result<Record> {
+fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> Result<Record, CliError> {
     let input: Box<dyn io::Read> = match input {
         None => Box::new(io::stdin()),
         Some(p) => Box::new(fs::File::open(p)?),
@@ -93,5 +74,5 @@ fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> anyhow::Result<Re
         }
     }
 
-    Err(anyhow::anyhow!("No matching record found"))
+    Err(CliError::NotFound)
 }
