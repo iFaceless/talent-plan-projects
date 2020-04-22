@@ -7,6 +7,7 @@ use std::{
     process,
 };
 use structopt::StructOpt;
+use anyhow;
 
 /// Opt collects the command line arguments
 #[derive(Debug, StructOpt)]
@@ -79,7 +80,7 @@ fn main() {
     }
 }
 
-fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> Result<Record, CliError> {
+fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> anyhow::Result<Record> {
     let input: Box<dyn io::Read> = match input {
         None => Box::new(io::stdin()),
         Some(p) => Box::new(fs::File::open(p)?),
@@ -92,5 +93,5 @@ fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> Result<Record, Cl
         }
     }
 
-    Err(CliError::NotFound)
+    Err(anyhow::anyhow!("No matching record found"))
 }

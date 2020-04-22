@@ -14,3 +14,4 @@ license = "MIT"
 structopt = "0.3.13"
 csv = "1.1.3"
 serde = {version = "1.0.106", features = ["derive"]}
+anyhow = "1.0.28"
