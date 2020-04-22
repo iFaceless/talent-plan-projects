@@ -2,7 +2,7 @@
 use csv;
 use serde::Deserialize;
 use std::{
-    fs, io,
+    fmt, fs, io,
     path::{Path, PathBuf},
     process,
 };
@@ -39,6 +39,35 @@ struct Record {
     number_of_cures: u32,
 }
 
+#[derive(Debug)]
+enum CliError {
+    Io(io::Error),
+    Csv(csv::Error),
+    NotFound,
+}
+
+impl fmt::Display for CliError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            CliError::Io(ref err) => err.fmt(f),
+            CliError::Csv(ref err) => err.fmt(f),
+            CliError::NotFound => write!(f, "No matching record found"),
+        }
+    }
+}
+
+impl From<io::Error> for CliError {
+    fn from(err: io::Error) -> CliError {
+        CliError::Io(err)
+    }
+}
+
+impl From<csv::Error> for CliError {
+    fn from(err: csv::Error) -> CliError {
+        CliError::Csv(err)
+    }
+}
+
 fn main() {
     let opt = Opt::from_args();
     match search(&opt.data_path.map(|x| x.as_path().to_owned()), &opt.country) {
@@ -46,14 +75,11 @@ fn main() {
         Err(e) => {
             println!("{:?}", e);
             process::exit(1);
-        },
+        }
     }
 }
 
-fn search<P: AsRef<Path>>(
-    input: &Option<P>,
-    country: &str,
-) -> Result<Record, Box<dyn std::error::Error>> {
+fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> Result<Record, CliError> {
     let input: Box<dyn io::Read> = match input {
         None => Box::new(io::stdin()),
         Some(p) => Box::new(fs::File::open(p)?),
@@ -66,5 +92,5 @@ fn search<P: AsRef<Path>>(
         }
     }
 
-    Err(From::from("No matching country found."))
+    Err(CliError::NotFound)
 }
