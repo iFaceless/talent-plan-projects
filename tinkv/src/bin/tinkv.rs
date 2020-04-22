@@ -38,12 +38,20 @@ struct Opt {
 }
 
 fn main() {
-    let opt = Opt::from_args();
-    match opt.command {
-        Command::Get { key: _key } => unimplemented(),
-        Command::Set { key: _key, value: _value } => unimplemented(),
-        Command::Remove { key: _value} => unimplemented(),
-    }
+    // let opt = Opt::from_args();
+    // match opt.command {
+    //     Command::Get { key: _key } => unimplemented(),
+    //     Command::Set { key: _key, value: _value } => unimplemented(),
+    //     Command::Remove { key: _value} => unimplemented(),
+    // }
+    let x: u32 = "123".parse().unwrap();
+    dbg!(x);
+
+    let y = "456".parse::<f32>().unwrap();
+    dbg!(y);
+
+    let z = "float".parse::<i32>().unwrap_or_default();
+    dbg!(z);
 }
 
 fn unimplemented() {
