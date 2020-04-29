@@ -8,6 +8,7 @@ use std::{
 };
 use structopt::StructOpt;
 use thiserror::Error;
+use anyhow;
 
 /// Opt collects the command line arguments
 #[derive(Debug, StructOpt)]
