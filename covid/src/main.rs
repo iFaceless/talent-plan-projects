@@ -52,21 +52,19 @@ enum CliError {
 }
 
 fn main() {
-    let opt = Opt::from_args();
-    match search(&opt.data_path.map(|x| x.as_path().to_owned()), &opt.country) {
-        Ok(r) => println!("{:?}", r),
+    const FILEPATH: &str = "/Users/chris/Projects/Rust/open_source/pingcap-tp/covid/assets/covid-19-infections-20200422.csv";
+    match search(FILEPATH, "美国") {
+        Ok(r) => {
+            println!("{:?}", r);
+        },
         Err(e) => {
-            println!("{}", e);
-            process::exit(1);
+            eprintln!("{:?}", e);
         }
-    }
+    };
 }
 
-fn search<P: AsRef<Path>>(input: &Option<P>, country: &str) -> Result<Record, CliError> {
-    let input: Box<dyn io::Read> = match input {
-        None => Box::new(io::stdin()),
-        Some(p) => Box::new(fs::File::open(p)?),
-    };
+fn search<P: AsRef<Path>>(filepath: P, country: &str) -> Result<Record, CliError> {
+    let input= fs::File::open(filepath)?;
     let mut rdr = csv::Reader::from_reader(input);
     for r in rdr.deserialize() {
         let record: Record = r?;

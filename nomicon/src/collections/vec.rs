@@ -1,10 +1,15 @@
-#![feature(ptr_internals)]
 ///! Implement a `std::Vec` from scratch.
 
-use std::ptr::{Unique};
 
-pub struct Vec<T> {
-    ptr: Unique<T>,
+pub struct Vector<T> {
+    ptr: *mut T,
     cap: usize,
-    size: usize,
+    len: usize,
+}
+
+impl<T> Vector<T> {
+    pub fn new() -> Self {
+        Self { ptr: 0, cap: 0, len: 0 }
+    }
+
 }
